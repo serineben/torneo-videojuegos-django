@@ -4,6 +4,7 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView
 
 from .forms import RegisterForm
+from .models import User
 
 
 class RegisterView(CreateView):
@@ -12,6 +13,7 @@ class RegisterView(CreateView):
     success_url = reverse_lazy("home")
 
     def form_valid(self, form):
+        form.instance.role = User.Role.PLAYER
         response = super().form_valid(form)
         login(self.request, self.object)  # log the user in after signing up
         return response
