@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'accounts',
     'games',
     'players',
+    'stats',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'

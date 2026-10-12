@@ -6,6 +6,7 @@ from django.urls import reverse
 
 from games.models import Game
 from .models import Registration
+from .services import game_ranking, general_ranking
 
 
 User = get_user_model()
@@ -65,3 +66,72 @@ class ParticipantListPermissionTests(TestCase):
         response = self.client.get(reverse("participant_list"))
 
         self.assertEqual(response.status_code, 403)
+
+
+class RankingServiceTests(TestCase):
+    def create_player(self, username):
+        return User.objects.create_user(
+            username=username,
+            email=f"{username}@example.com",
+            password="test-password",
+        )
+
+    def register(self, user, game, points):
+        return Registration.objects.create(user=user, game=game, points=points)
+
+    def test_game_ranking_orders_by_points_and_shares_positions_for_ties(self):
+        game = Game.objects.create(name="Chess")
+        alice = self.create_player("alice")
+        bob = self.create_player("bob")
+        carol = self.create_player("carol")
+        dave = self.create_player("dave")
+        unscored = self.create_player("unscored")
+        self.register(alice, game, 100)
+        self.register(carol, game, 70)
+        self.register(bob, game, 70)
+        self.register(dave, game, 40)
+        self.register(unscored, game, None)
+
+        ranking = game_ranking(game)
+
+        self.assertEqual(
+            [
+                (item["position"], item["registration"].user.username, item["registration"].points)
+                for item in ranking
+            ],
+            [
+                (1, "alice", 100),
+                (2, "bob", 70),
+                (2, "carol", 70),
+                (4, "dave", 40),
+            ],
+        )
+
+    def test_general_ranking_sums_points_across_games_and_shares_ties(self):
+        chess = Game.objects.create(name="Chess")
+        go = Game.objects.create(name="Go")
+        alice = self.create_player("alice")
+        bob = self.create_player("bob")
+        carol = self.create_player("carol")
+        unscored = self.create_player("unscored")
+        self.register(alice, chess, 100)
+        self.register(alice, go, 50)
+        self.register(bob, chess, 75)
+        self.register(bob, go, 75)
+        self.register(carol, chess, 80)
+        self.register(carol, go, None)
+        self.register(unscored, chess, None)
+
+        ranking = general_ranking()
+
+        self.assertEqual(
+            [
+                (item["position"], item["user"].username, item["total_points"])
+                for item in ranking
+            ],
+            [
+                (1, "alice", 150),
+                (1, "bob", 150),
+                (3, "carol", 80),
+            ],
+        )

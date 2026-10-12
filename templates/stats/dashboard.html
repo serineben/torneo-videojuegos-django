@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Estadísticas{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">Estadísticas del torneo</h1>
+
+<!-- Key figures -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card shadow-sm text-center"><div class="card-body">
+            <div class="display-6">{{ summary.participants }}</div>
+            <div class="text-muted small">Participantes</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card shadow-sm text-center"><div class="card-body">
+            <div class="display-6">{{ summary.games }}</div>
+            <div class="text-muted small">Juegos</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card shadow-sm text-center"><div class="card-body">
+            <div class="display-6">{{ summary.registrations }}</div>
+            <div class="text-muted small">Inscripciones</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card shadow-sm text-center"><div class="card-body">
+            <div class="display-6">{{ summary.scored }}</div>
+            <div class="text-muted small">Resultados registrados</div>
+        </div></div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card shadow-sm h-100"><div class="card-body">
+            <h2 class="h6">Top 10 jugadores (puntos totales)</h2>
+            {% if top_players.labels %}
+                <canvas id="chart-top"></canvas>
+            {% else %}
+                <p class="text-muted text-center py-5 mb-0">Todavía no hay puntos registrados.</p>
+            {% endif %}
+        </div></div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card shadow-sm h-100"><div class="card-body">
+            <h2 class="h6">Inscripciones por nivel</h2>
+            {% if summary.registrations %}
+                <canvas id="chart-levels"></canvas>
+            {% else %}
+                <p class="text-muted text-center py-5 mb-0">Todavía no hay inscripciones.</p>
+            {% endif %}
+        </div></div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100"><div class="card-body">
+            <h2 class="h6">Participantes por juego</h2>
+            {% if registrations_per_game.labels %}
+                <canvas id="chart-per-game"></canvas>
+            {% else %}
+                <p class="text-muted text-center py-5 mb-0">Todavía no hay juegos.</p>
+            {% endif %}
+        </div></div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100"><div class="card-body">
+            <h2 class="h6">Media de puntos por juego</h2>
+            {% if average_points.labels %}
+                <canvas id="chart-average"></canvas>
+            {% else %}
+                <p class="text-muted text-center py-5 mb-0">Todavía no hay juegos.</p>
+            {% endif %}
+        </div></div>
+    </div>
+    <div class="col-12">
+        <div class="card shadow-sm"><div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h2 class="h6 mb-0">Puntos por jugador en un juego</h2>
+                {% if games %}
+                <form method="get">
+                    <select name="game" class="form-select form-select-sm" onchange="this.form.submit()">
+                        {% for g in games %}
+                            <option value="{{ g.pk }}" {% if g == selected_game %}selected{% endif %}>{{ g.name }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+                {% endif %}
+            </div>
+            {% if game_points and game_points.labels %}
+                <canvas id="chart-game"></canvas>
+            {% else %}
+                <p class="text-muted text-center py-5 mb-0">No hay puntos registrados para este juego.</p>
+            {% endif %}
+        </div></div>
+    </div>
+</div>
+
+{{ top_players|json_script:"data-top" }}
+{{ level_distribution|json_script:"data-levels" }}
+{{ registrations_per_game|json_script:"data-per-game" }}
+{{ average_points|json_script:"data-average" }}
+{{ game_points|json_script:"data-game" }}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+const palette = ["#0d6efd", "#198754", "#ffc107", "#dc3545", "#6f42c1", "#20c997", "#fd7e14", "#0dcaf0", "#6c757d", "#d63384"];
+
+function makeChart(canvasId, type, dataId, label, integer = true) {
+    const canvas = document.getElementById(canvasId);
+    const dataEl = document.getElementById(dataId);
+    if (!canvas || !dataEl) return;
+    const info = JSON.parse(dataEl.textContent);
+    if (!info || !info.labels.length) return;
+
+    const isDoughnut = type === "doughnut";
+    new Chart(canvas, {
+        type: type,
+        data: {
+            labels: info.labels,
+            datasets: [{ label: label, data: info.data, backgroundColor: palette }],
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: isDoughnut } },
+            scales: isDoughnut ? {} : {
+                y: { beginAtZero: true, ticks: integer ? { precision: 0 } : {} },
+            },
+        },
+    });
+}
+
+makeChart("chart-top", "bar", "data-top", "Puntos totales");
+makeChart("chart-levels", "doughnut", "data-levels", "Inscripciones");
+makeChart("chart-per-game", "bar", "data-per-game", "Participantes");
+makeChart("chart-average", "bar", "data-average", "Media de puntos", false);
+makeChart("chart-game", "bar", "data-game", "Puntos");
+</script>
+{% endblock %}
