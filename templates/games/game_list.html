@@ -24,9 +24,10 @@
                         <img src="{{ game.image.url }}" alt="{{ game.name }}" class="img-thumbnail" style="max-height:50px">
                     {% endif %}
                 </td>
-                <td>{{ game.name }}</td>
+                <td><a href="{% url 'game_detail' game.pk %}">{{ game.name }}</a></td>
                 <td>{{ game.description|truncatechars:80 }}</td>
                 <td class="text-end">
+                    <a href="{% url 'game_detail' game.pk %}" class="btn btn-sm btn-outline-secondary">Ver</a>
                     <a href="{% url 'game_update' game.pk %}" class="btn btn-sm btn-outline-primary">Editar</a>
                     <a href="{% url 'game_delete' game.pk %}" class="btn btn-sm btn-outline-danger">Eliminar</a>
                 </td>

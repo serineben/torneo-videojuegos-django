@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Inscripción{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="h4 mb-1">{% if object %}Editar inscripción{% else %}Nueva inscripción{% endif %}</h2>
+                <p class="text-muted">Participante: <strong>{{ participant.username }}</strong></p>
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% for error in field.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    <button class="btn btn-primary">Guardar</button>
+                    <a href="{% url 'participant_detail' participant.pk %}" class="btn btn-secondary">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

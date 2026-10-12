@@ -1,10 +1,10 @@
 from django.contrib import messages
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DeleteView, ListView, UpdateView
-
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 from accounts.mixins import AdminRequiredMixin
 from .forms import GameForm
 from .models import Game
+
 
 
 class GameListView(AdminRequiredMixin, ListView):
@@ -12,6 +12,17 @@ class GameListView(AdminRequiredMixin, ListView):
     template_name = "games/game_list.html"
     context_object_name = "games"
 
+class GameDetailView(AdminRequiredMixin, DetailView):
+    model = Game
+    template_name = "games/game_detail.html"
+    context_object_name = "game"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["registrations"] = (
+            self.object.registrations.select_related("user").order_by("-points", "user__username")
+        )
+        return context
 
 class GameCreateView(AdminRequiredMixin, CreateView):
     model = Game

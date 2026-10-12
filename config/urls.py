@@ -25,6 +25,7 @@ urlpatterns = [
     path("cuentas/", include("accounts.urls")),
     path("", TemplateView.as_view(template_name="home.html"), name="home"),
     path("juegos/", include("games.urls")),
+    path("participantes/", include("players.urls")),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
