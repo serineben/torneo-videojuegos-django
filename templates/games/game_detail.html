@@ -18,6 +18,8 @@
                 <div class="mt-3">
                     <a href="{% url 'game_update' game.pk %}" class="btn btn-sm btn-outline-primary">Editar</a>
                     <a href="{% url 'game_delete' game.pk %}" class="btn btn-sm btn-outline-danger">Eliminar</a>
+                    <a href="{% url 'game_points' game.pk %}" class="btn btn-sm btn-success">Introducir puntos</a>
+                    <a href="{% url 'game_ranking' game.pk %}" class="btn btn-sm btn-outline-dark">Ver clasificación</a>
                 </div>
             </div>
         </div>

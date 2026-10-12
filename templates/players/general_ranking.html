@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Clasificación general{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Clasificación general</h1>
+
+<div class="card shadow-sm">
+    <table class="table mb-0 align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th style="width:80px">Puesto</th>
+                <th>Participante</th>
+                <th>Puntos totales</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in ranking %}
+            <tr>
+                <td>
+                    {% if row.position == 1 %}🥇{% elif row.position == 2 %}🥈{% elif row.position == 3 %}🥉{% else %}{{ row.position }}{% endif %}
+                </td>
+                <td>{{ row.user.username }}</td>
+                <td><strong>{{ row.total_points }}</strong></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-center text-muted py-4">Todavía no hay puntos registrados.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

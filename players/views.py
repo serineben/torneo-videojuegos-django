@@ -9,6 +9,14 @@ from .forms import ParticipantCreateForm, ParticipantUpdateForm, RegistrationFor
 from .models import Registration
 
 
+from django.shortcuts import render
+from django.views import View
+
+from games.models import Game
+from .forms import PointsFormSet
+from .services import game_ranking, general_ranking
+
+
 class ParticipantListView(AdminRequiredMixin, ListView):
     template_name = "players/participant_list.html"
     context_object_name = "participants"
@@ -127,3 +135,43 @@ class RegistrationDeleteView(AdminRequiredMixin, DeleteView):
 
     def get_success_url(self):
         return reverse("participant_detail", args=[self.object.user.pk])
+
+
+
+class GamePointsView(AdminRequiredMixin, View):
+    template_name = "players/game_points.html"
+
+    def get_game(self, pk):
+        return get_object_or_404(Game, pk=pk)
+
+    def get_queryset(self, game):
+        return Registration.objects.filter(game=game).select_related("user").order_by("user__username")
+
+    def get(self, request, pk):
+        game = self.get_game(pk)
+        formset = PointsFormSet(queryset=self.get_queryset(game))
+        return render(request, self.template_name, {"game": game, "formset": formset})
+
+    def post(self, request, pk):
+        game = self.get_game(pk)
+        formset = PointsFormSet(request.POST, queryset=self.get_queryset(game))
+        if formset.is_valid():
+            formset.save()
+            messages.success(request, "Puntos guardados correctamente.")
+            return redirect("game_ranking", pk=game.pk)
+        return render(request, self.template_name, {"game": game, "formset": formset})
+
+
+class GameRankingView(AdminRequiredMixin, View):
+    template_name = "players/game_ranking.html"
+
+    def get(self, request, pk):
+        game = get_object_or_404(Game, pk=pk)
+        return render(request, self.template_name, {"game": game, "ranking": game_ranking(game)})
+
+
+class GeneralRankingView(AdminRequiredMixin, View):
+    template_name = "players/general_ranking.html"
+
+    def get(self, request):
+        return render(request, self.template_name, {"ranking": general_ranking()})

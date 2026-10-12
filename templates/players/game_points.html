@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Puntos - {{ game.name }}{% endblock %}
+{% block content %}
+<a href="{% url 'game_detail' game.pk %}" class="small">← Volver al juego</a>
+<h1 class="h4 mt-2 mb-3">Puntos de {{ game.name }}</h1>
+
+<form method="post">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    <div class="card shadow-sm mb-3">
+        <table class="table mb-0 align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Participante</th>
+                    <th>Nivel</th>
+                    <th style="width:200px">Puntos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for form in formset %}
+                <tr>
+                    <td>{{ form.instance.user.username }}</td>
+                    <td>{{ form.instance.get_level_display }}</td>
+                    <td>
+                        {{ form.id }}
+                        {{ form.points }}
+                        {% for error in form.points.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" class="text-center text-muted py-4">No hay participantes inscritos en este juego.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if formset.forms %}
+        <button class="btn btn-primary">Guardar puntos</button>
+    {% endif %}
+    <a href="{% url 'game_detail' game.pk %}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

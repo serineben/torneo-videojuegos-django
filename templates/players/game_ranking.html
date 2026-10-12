@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Clasificación - {{ game.name }}{% endblock %}
+{% block content %}
+<a href="{% url 'game_detail' game.pk %}" class="small">← Volver al juego</a>
+<div class="d-flex justify-content-between align-items-center mt-2 mb-3">
+    <h1 class="h4 mb-0">Clasificación de {{ game.name }}</h1>
+    <a href="{% url 'game_points' game.pk %}" class="btn btn-primary btn-sm">Introducir puntos</a>
+</div>
+
+<div class="card shadow-sm">
+    <table class="table mb-0 align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th style="width:80px">Puesto</th>
+                <th>Participante</th>
+                <th>Nivel</th>
+                <th>Puntos</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in ranking %}
+            <tr>
+                <td>
+                    {% if row.position == 1 %}🥇{% elif row.position == 2 %}🥈{% elif row.position == 3 %}🥉{% else %}{{ row.position }}{% endif %}
+                </td>
+                <td>{{ row.registration.user.username }}</td>
+                <td>{{ row.registration.get_level_display }}</td>
+                <td><strong>{{ row.registration.points }}</strong></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center text-muted py-4">Todavía no hay puntos registrados.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -3,6 +3,8 @@ from django.contrib.auth.forms import UserCreationForm
 
 from accounts.models import User
 from .models import Registration
+from django.forms import modelformset_factory
+
 
 
 class ParticipantCreateForm(UserCreationForm):
@@ -61,3 +63,12 @@ class RegistrationForm(forms.ModelForm):
         if qs.exists():
             raise forms.ValidationError("Este participante ya está inscrito en este juego.")
         return game
+
+PointsFormSet = modelformset_factory(
+    Registration,
+    fields=("points",),
+    extra=0,
+    widgets={
+        "points": forms.NumberInput(attrs={"class": "form-control", "min": 0}),
+    },
+)
