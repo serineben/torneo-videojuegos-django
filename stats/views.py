@@ -3,6 +3,7 @@ from django.views.generic import TemplateView
 
 from games.models import Game
 from . import services
+from players.services import general_ranking
 
 
 class DashboardView(LoginRequiredMixin, TemplateView):
@@ -30,4 +31,16 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             "selected_game": selected,
             "game_points": services.points_for_game(selected) if selected else None,
         })
+        return context
+
+class HomeView(TemplateView):
+    template_name = "home.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["summary"] = services.summary()
+        context["games"] = Game.objects.all()[:6]
+        # The podium is only shown to logged-in users, like the dashboard
+        if self.request.user.is_authenticated:
+            context["podium"] = general_ranking()[:3]
         return context

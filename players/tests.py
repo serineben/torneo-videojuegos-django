@@ -68,6 +68,159 @@ class ParticipantListPermissionTests(TestCase):
         self.assertEqual(response.status_code, 403)
 
 
+class ParticipantListViewTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            username="admin",
+            email="admin@example.com",
+            password="test-password",
+            role=User.Role.ADMIN,
+        )
+        self.client.force_login(self.admin)
+
+    def create_player(self, username, email=None):
+        return User.objects.create_user(
+            username=username,
+            email=email or f"{username}@example.com",
+            password="test-password",
+        )
+
+    def get_participant_names(self, **params):
+        response = self.client.get(reverse("participant_list"), params)
+        self.assertEqual(response.status_code, 200)
+        return [user.username for user in response.context["participants"]]
+
+    def test_filters_by_username_case_insensitively(self):
+        self.create_player("MiXeDName")
+        self.create_player("another")
+
+        self.assertEqual(self.get_participant_names(q="mixed"), ["MiXeDName"])
+
+    def test_filters_by_email_case_insensitively(self):
+        self.create_player("matching", "Contact-Needle@example.com")
+        self.create_player("another", "other@example.com")
+
+        self.assertEqual(self.get_participant_names(q="NEEDLE"), ["matching"])
+
+    def test_filters_by_game(self):
+        chess = Game.objects.create(name="Chess")
+        go = Game.objects.create(name="Go")
+        chess_player = self.create_player("chess_player")
+        go_player = self.create_player("go_player")
+        Registration.objects.create(user=chess_player, game=chess)
+        Registration.objects.create(user=go_player, game=go)
+
+        self.assertEqual(
+            self.get_participant_names(game=str(chess.pk)),
+            ["chess_player"],
+        )
+
+    def test_filters_by_level(self):
+        game = Game.objects.create(name="Chess")
+        amateur = self.create_player("amateur")
+        expert = self.create_player("expert")
+        Registration.objects.create(
+            user=amateur,
+            game=game,
+            level=Registration.Level.AMATEUR,
+        )
+        Registration.objects.create(
+            user=expert,
+            game=game,
+            level=Registration.Level.EXPERT,
+        )
+
+        self.assertEqual(
+            self.get_participant_names(level=Registration.Level.AMATEUR),
+            ["amateur"],
+        )
+
+    def test_game_and_level_must_match_the_same_registration(self):
+        chess = Game.objects.create(name="Chess")
+        go = Game.objects.create(name="Go")
+        mismatched = self.create_player("mismatched")
+        matching = self.create_player("matching")
+        Registration.objects.create(
+            user=mismatched,
+            game=chess,
+            level=Registration.Level.EXPERT,
+        )
+        Registration.objects.create(
+            user=mismatched,
+            game=go,
+            level=Registration.Level.AMATEUR,
+        )
+        Registration.objects.create(
+            user=matching,
+            game=chess,
+            level=Registration.Level.AMATEUR,
+        )
+
+        self.assertEqual(
+            self.get_participant_names(
+                game=str(chess.pk),
+                level=Registration.Level.AMATEUR,
+            ),
+            ["matching"],
+        )
+
+    def test_filter_does_not_return_duplicate_participants(self):
+        chess = Game.objects.create(name="Chess")
+        go = Game.objects.create(name="Go")
+        repeated = self.create_player("repeated")
+        Registration.objects.create(
+            user=repeated,
+            game=chess,
+            level=Registration.Level.AMATEUR,
+        )
+        Registration.objects.create(
+            user=repeated,
+            game=go,
+            level=Registration.Level.AMATEUR,
+        )
+
+        self.assertEqual(
+            self.get_participant_names(level=Registration.Level.AMATEUR),
+            ["repeated"],
+        )
+
+    def test_paginates_ten_participants_per_page(self):
+        for index in range(12):
+            self.create_player(f"player{index:02}")
+
+        first_page = self.client.get(reverse("participant_list"))
+        second_page = self.client.get(reverse("participant_list"), {"page": 2})
+
+        self.assertEqual(first_page.status_code, 200)
+        self.assertEqual(second_page.status_code, 200)
+        self.assertEqual(len(first_page.context["participants"]), 10)
+        self.assertEqual(len(second_page.context["participants"]), 2)
+        self.assertTrue(first_page.context["is_paginated"])
+
+
+class GameListViewTests(TestCase):
+    def setUp(self):
+        admin = User.objects.create_user(
+            username="admin",
+            email="admin@example.com",
+            password="test-password",
+            role=User.Role.ADMIN,
+        )
+        self.client.force_login(admin)
+
+    def test_searches_game_name_case_insensitively(self):
+        Game.objects.create(name="Chess Club")
+        Game.objects.create(name="Go")
+
+        response = self.client.get(reverse("game_list"), {"q": "cHeSs"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [game.name for game in response.context["games"]],
+            ["Chess Club"],
+        )
+
+
 class RankingServiceTests(TestCase):
     def create_player(self, username):
         return User.objects.create_user(

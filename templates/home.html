@@ -1,7 +1,76 @@
 {% extends "base.html" %}
+{% block title %}Inicio{% endblock %}
 {% block content %}
-<div class="text-center py-5">
-    <h1>Torneo de Videojuegos</h1>
-    <p class="lead">Regístrate, elige tus juegos y compite por el primer puesto.</p>
+<section class="text-center text-white bg-dark rounded-3 py-5 px-3 mb-4">
+    <h1 class="display-5 fw-bold">🎮 Torneo de Videojuegos</h1>
+    <p class="lead mb-4">Regístrate, elige tus juegos y compite por el primer puesto.</p>
+    <div class="d-flex justify-content-center gap-2 flex-wrap">
+        {% if not user.is_authenticated %}
+            <a href="{% url 'register' %}" class="btn btn-primary btn-lg">Crear cuenta</a>
+            <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg">Iniciar sesión</a>
+        {% elif user.is_admin_role %}
+            <a href="{% url 'participant_list' %}" class="btn btn-warning btn-lg">Gestionar participantes</a>
+            <a href="{% url 'game_list' %}" class="btn btn-outline-light btn-lg">Gestionar juegos</a>
+        {% else %}
+            <a href="{% url 'my_profile' %}" class="btn btn-warning btn-lg">Mi perfil</a>
+            <a href="{% url 'dashboard' %}" class="btn btn-outline-light btn-lg">Ver estadísticas</a>
+        {% endif %}
+    </div>
+</section>
+
+<div class="row g-3 mb-4 text-center">
+    <div class="col-4">
+        <div class="card shadow-sm"><div class="card-body">
+            <div class="h2 mb-0">{{ summary.participants }}</div>
+            <div class="text-muted small">Participantes</div>
+        </div></div>
+    </div>
+    <div class="col-4">
+        <div class="card shadow-sm"><div class="card-body">
+            <div class="h2 mb-0">{{ summary.games }}</div>
+            <div class="text-muted small">Juegos</div>
+        </div></div>
+    </div>
+    <div class="col-4">
+        <div class="card shadow-sm"><div class="card-body">
+            <div class="h2 mb-0">{{ summary.registrations }}</div>
+            <div class="text-muted small">Inscripciones</div>
+        </div></div>
+    </div>
 </div>
+
+{% if podium %}
+<h2 class="h4 mb-3">🏆 Podio del torneo</h2>
+<div class="row g-3 mb-4">
+    {% for row in podium %}
+    <div class="col-md-4">
+        <div class="card shadow-sm text-center h-100"><div class="card-body">
+            <div class="display-5">{% if row.position == 1 %}🥇{% elif row.position == 2 %}🥈{% else %}🥉{% endif %}</div>
+            <div class="h5 mb-0">{{ row.user.username }}</div>
+            <div class="text-muted">{{ row.total_points }} puntos</div>
+        </div></div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if games %}
+<h2 class="h4 mb-3">Juegos del torneo</h2>
+<div class="row g-3">
+    {% for game in games %}
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card shadow-sm h-100 text-center">
+            {% if game.image %}
+                <img src="{{ game.image.url }}" alt="{{ game.name }}" class="card-img-top" style="height:110px;object-fit:cover">
+            {% else %}
+                <div class="display-4 py-4">🎲</div>
+            {% endif %}
+            <div class="card-body p-2">
+                <div class="small fw-semibold">{{ game.name }}</div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
 {% endblock %}

@@ -6,6 +6,9 @@ from django.views.generic import CreateView
 from .forms import RegisterForm
 from .models import User
 
+from django.contrib import messages
+from django.contrib.messages.views import SuccessMessageMixin
+
 
 class RegisterView(CreateView):
     form_class = RegisterForm
@@ -13,15 +16,16 @@ class RegisterView(CreateView):
     success_url = reverse_lazy("home")
 
     def form_valid(self, form):
-        form.instance.role = User.Role.PLAYER
         response = super().form_valid(form)
-        login(self.request, self.object)  # log the user in after signing up
+        login(self.request, self.object)
+        messages.success(self.request, "Cuenta creada correctamente. ¡Bienvenido!")
         return response
 
 
-class CustomLoginView(LoginView):
+class CustomLoginView(SuccessMessageMixin, LoginView):
     template_name = "accounts/login.html"
     redirect_authenticated_user = True
+    success_message = "Has iniciado sesión correctamente."
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
