@@ -2,8 +2,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 
 from games.models import Game
-from . import services
 from players.services import general_ranking
+
+from . import services
 
 
 class DashboardView(LoginRequiredMixin, TemplateView):

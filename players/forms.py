@@ -1,10 +1,10 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-
-from accounts.models import User
-from .models import Registration
 from django.forms import modelformset_factory
 
+from accounts.models import User
+
+from .models import Registration
 
 
 class ParticipantCreateForm(UserCreationForm):

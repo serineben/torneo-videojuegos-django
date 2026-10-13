@@ -9,3 +9,6 @@
 - Textos de la interfaz, verbose_name, mensajes y plantillas en español
 - Usar class-based views y mixins para los permisos
 - Los secretos se gestionan con python-decouple, nunca en el código
+- Tests: archivos test_*.py en cada app (TestCase), helpers en config/testing.py
+- Ejecutar: python manage.py test; cobertura: coverage run manage.py test
+- Linter: ruff check . (configuración en ruff.toml)

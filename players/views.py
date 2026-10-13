@@ -1,18 +1,29 @@
 from django.contrib import messages
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView, FormView, TemplateView
-from django.db.models import Q
 from django.views import View
-
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    DetailView,
+    ListView,
+    TemplateView,
+    UpdateView,
+)
 
 from accounts.mixins import AdminRequiredMixin, PlayerRequiredMixin, QueryStringMixin
 from accounts.models import User
-from .forms import ParticipantCreateForm, ParticipantUpdateForm, RegistrationForm, PointsFormSet
-from .models import Registration
 from games.models import Game
-from .services import game_ranking, general_ranking, player_summary
 
+from .forms import (
+    ParticipantCreateForm,
+    ParticipantUpdateForm,
+    PointsFormSet,
+    RegistrationForm,
+)
+from .models import Registration
+from .services import game_ranking, general_ranking, player_summary
 
 
 class ParticipantListView(AdminRequiredMixin, QueryStringMixin, ListView):

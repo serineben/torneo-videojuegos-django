@@ -1,10 +1,17 @@
 from django.contrib import messages
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    DetailView,
+    ListView,
+    UpdateView,
+)
+
 from accounts.mixins import AdminRequiredMixin, QueryStringMixin
+
 from .forms import GameForm
 from .models import Game
-
 
 
 class GameListView(AdminRequiredMixin, QueryStringMixin, ListView):

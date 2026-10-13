@@ -32,3 +32,39 @@ class RegisterViewTests(TestCase):
         self.assertRedirects(response, reverse("home"))
         self.assertEqual(user.role, User.Role.PLAYER)
         self.assertEqual(self.client.session["_auth_user_id"], str(user.pk))
+
+    def test_success_message_is_shown_after_registration(self):
+        response = self.client.post(
+            reverse("register"),
+            {
+                "username": "welcomed",
+                "email": "welcomed@example.com",
+                "password1": "StrongPassword!942",
+                "password2": "StrongPassword!942",
+            },
+            follow=True,
+        )
+
+        self.assertRedirects(response, reverse("home"))
+        self.assertContains(response, "Cuenta creada correctamente. ¡Bienvenido!")
+
+
+class LoginViewTests(TestCase):
+    def test_success_message_is_shown_after_login(self):
+        User.objects.create_user(
+            username="returning",
+            email="returning@example.com",
+            password="StrongPassword!942",
+        )
+
+        response = self.client.post(
+            reverse("login"),
+            {
+                "username": "returning",
+                "password": "StrongPassword!942",
+            },
+            follow=True,
+        )
+
+        self.assertRedirects(response, reverse("home"))
+        self.assertContains(response, "Has iniciado sesión correctamente.")

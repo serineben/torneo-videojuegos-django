@@ -1,13 +1,11 @@
+from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.views import LoginView
+from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
 
 from .forms import RegisterForm
-from .models import User
-
-from django.contrib import messages
-from django.contrib.messages.views import SuccessMessageMixin
 
 
 class RegisterView(CreateView):

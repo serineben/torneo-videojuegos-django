@@ -5,9 +5,9 @@ from django.test import TestCase
 from django.urls import reverse
 
 from games.models import Game
+
 from .models import Registration
 from .services import game_ranking, general_ranking
-
 
 User = get_user_model()
 
