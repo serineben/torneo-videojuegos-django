@@ -1,7 +1,187 @@
-# SUPERUSER
-proyecto
-proyecto2026@gmail.com
-Python2026
+# 🎮 Torneo de Videojuegos
 
+Aplicación web desarrollada con **Python y Django** para organizar y gestionar un torneo de videojuegos: registro y control de acceso, base de datos de participantes, clasificaciones y gráficas de resultados.
 
-0f-0sd+8osnd18^l_&j&yo9$nc)aq0c8^b7qgl*zh$!8@(@#91
+![Python](https://img.shields.io/badge/Python-3.x-blue)
+![Django](https://img.shields.io/badge/Django-6.x-green)
+![Tests](https://img.shields.io/badge/tests-passing-brightgreen)
+
+![Página de inicio](docs/screenshots/35_home_logueado.png)
+
+## 📋 Descripción
+
+Un cliente (una empresa de videojuegos) necesita una plataforma para gestionar un torneo. El formato elegido es **por puntos**: cada participante se inscribe en uno o varios juegos con un nivel (*amateur*, *normal* o *expert*), el administrador registra los puntos obtenidos y la aplicación calcula automáticamente la clasificación de cada juego y la clasificación general (suma de puntos). Gana quien tenga más puntos.
+
+## ✨ Funcionalidades
+
+**Acceso y seguridad**
+- Registro de participantes e inicio de sesión con contraseñas cifradas.
+- Dos roles: **administrador** y **jugador**. Todo registro nuevo es jugador; el rol no se puede elegir.
+- Permisos comprobados en cada vista (redirección al login o error 403).
+
+**Administrador**
+- Listar, crear, editar y eliminar **juegos** (con imagen) y **participantes**.
+- Inscribir participantes en juegos y modificar su nivel.
+- Introducir los puntos de todos los inscritos de un juego en una sola pantalla.
+- Búsqueda por nombre o correo, filtros por juego y nivel, y paginación.
+
+**Jugador**
+- Perfil con puntos totales, puesto general y puesto en cada juego.
+- Inscribirse por sí mismo en un juego y cancelar la inscripción mientras no tenga puntos.
+
+**Estadísticas (todos los usuarios)**
+- Clasificación por juego y general, con empates que comparten puesto.
+- Gráficas (Chart.js): top 10 de jugadores, inscripciones por nivel, participantes por juego, media de puntos por juego y puntos por jugador en un juego seleccionable.
+
+## 🖼️ Capturas
+
+| Inicio | Panel de estadísticas |
+|---|---|
+| ![Inicio](docs/screenshots/34_home_anonimo.png) | ![Estadísticas](docs/screenshots/22_estadisticas_resumen.png) |
+
+| Participantes con filtros | Introducir puntos |
+|---|---|
+| ![Participantes](docs/screenshots/31_participantes_filtros.png) | ![Puntos](docs/screenshots/19_puntos_introducir.png) |
+
+| Clasificación general | Perfil del jugador |
+|---|---|
+| ![Clasificación](docs/screenshots/21_clasificacion_general.png) | ![Perfil](docs/screenshots/27_perfil_jugador.png) |
+
+| Versión móvil |
+|---|
+| ![Móvil](docs/screenshots/36_navbar_movil.png) |
+
+## 🛠️ Tecnologías
+
+- Python y Django (vistas basadas en clases y mixins de permisos)
+- SQLite
+- Bootstrap 5 (diseño responsive) y Chart.js (gráficas)
+- python-decouple (variables de entorno), Pillow (imágenes)
+- coverage y ruff (calidad del código)
+
+## 🗄️ Modelo de datos
+
+```mermaid
+erDiagram
+    USER ||--o{ REGISTRATION : "se inscribe"
+    GAME ||--o{ REGISTRATION : "recibe"
+
+    USER {
+        int id PK
+        string username
+        string email UK
+        string password
+        string role "admin / player"
+        bool is_active
+    }
+    GAME {
+        int id PK
+        string name UK
+        text description
+        image image
+        datetime created_at
+    }
+    REGISTRATION {
+        int id PK
+        int user_id FK
+        int game_id FK
+        string level "amateur / normal / expert"
+        int points "nulo hasta que se registra"
+        datetime created_at
+    }
+```
+
+Un participante solo puede inscribirse una vez por juego (restricción única `user + game`). Las clasificaciones no se guardan: se calculan a partir de los puntos de las inscripciones.
+
+## 🚀 Instalación
+
+Requisitos: Python 3.10 o superior y Git.
+
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/serineben/torneo-videojuegos-django.git
+cd torneo-videojuegos-django
+
+# 2. Crear y activar el entorno virtual
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+
+# 3. Instalar dependencias
+pip install -r requirements.txt
+
+# 4. Configurar variables de entorno
+cp .env.example .env            # Windows: copy .env.example .env
+```
+
+Edita `.env` y sustituye `SECRET_KEY` por una clave nueva. Puedes generarla con:
+
+```bash
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```
+
+```bash
+# 5. Crear la base de datos y un administrador
+python manage.py migrate
+python manage.py createsuperuser
+
+# 6. (Opcional) Cargar datos de demostración
+python manage.py seed
+
+# 7. Arrancar el servidor
+python manage.py runserver
+```
+
+Abre `http://127.0.0.1:8000`.
+
+### Datos de demostración
+
+`python manage.py seed` crea 5 juegos y 20 participantes (`demo_01`, `demo_02`...) con contraseña `demo1234`, con inscripciones, niveles y puntos aleatorios. Opciones:
+
+```bash
+python manage.py seed --players 40   # más participantes
+python manage.py seed --clear        # borra los demo_ anteriores y los recrea
+```
+
+El superusuario que creas con `createsuperuser` tiene el rol de administrador.
+
+## 🔗 Rutas principales
+
+| Ruta | Acceso | Descripción |
+|---|---|---|
+| `/` | Público | Inicio (el podio solo se muestra con sesión iniciada) |
+| `/cuentas/registro/`, `/cuentas/login/` | Público | Registro e inicio de sesión |
+| `/estadisticas/` | Usuarios con sesión | Panel de gráficas |
+| `/mi-perfil/` | Jugador | Perfil e inscripciones propias |
+| `/juegos/` | Administrador | Gestión de juegos |
+| `/participantes/` | Administrador | Gestión de participantes e inscripciones |
+| `/participantes/clasificacion/` | Administrador | Clasificación general |
+| `/participantes/juego/<id>/puntos/` | Administrador | Introducir puntos de un juego |
+
+## ✅ Tests y calidad del código
+
+```bash
+pip install -r requirements-dev.txt
+
+python manage.py test                 # ejecutar los tests
+coverage run manage.py test           # medir la cobertura
+coverage report -m
+ruff check .                          # análisis estático
+```
+
+La suite (114 tests) cubre servicios de clasificación, vistas, formularios, el comando `seed` y, sobre todo, **los permisos de cada URL** para usuarios anónimos, jugadores y administradores.
+
+## 📁 Estructura del proyecto
+
+```
+├── accounts/    # usuario personalizado, registro, login y mixins de permisos
+├── games/       # modelo Game y CRUD (administrador)
+├── players/     # inscripciones, clasificaciones, área del jugador y comando seed
+├── stats/       # página de inicio y panel de gráficas
+├── config/      # ajustes y URLs del proyecto
+├── templates/   # plantillas HTML (Bootstrap)
+└── docs/        # capturas de pantalla
+```
+
+## 👤 Autor
+
+BENMOHRA SERINE · Proyecto final · [GitHub](https://github.com/serineben)
