@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Mi perfil{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">Mi perfil</h1>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100"><div class="card-body">
+            <div class="text-muted small">Usuario</div>
+            <div class="h5 mb-0">{{ user.username }}</div>
+            <div class="text-muted small">{{ user.email }}</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-4">
+        <div class="card shadow-sm text-center h-100"><div class="card-body">
+            <div class="display-6">{{ total_points|default_if_none:"-" }}</div>
+            <div class="text-muted small">Puntos totales</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-4">
+        <div class="card shadow-sm text-center h-100"><div class="card-body">
+            <div class="display-6">{{ general_position|default_if_none:"-" }}</div>
+            <div class="text-muted small">Puesto en la clasificación general</div>
+        </div></div>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h5 mb-0">Mis inscripciones</h2>
+    <a href="{% url 'my_registration_create' %}" class="btn btn-primary btn-sm">+ Inscribirme en un juego</a>
+</div>
+
+<div class="card shadow-sm">
+    <table class="table mb-0 align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>Juego</th>
+                <th>Nivel</th>
+                <th>Puntos</th>
+                <th>Puesto</th>
+                <th class="text-end">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                <td>{{ row.registration.game.name }}</td>
+                <td>{{ row.registration.get_level_display }}</td>
+                <td>{{ row.registration.points|default_if_none:"-" }}</td>
+                <td>
+                    {% if row.position == 1 %}🥇{% elif row.position == 2 %}🥈{% elif row.position == 3 %}🥉{% elif row.position %}{{ row.position }}{% else %}-{% endif %}
+                </td>
+                <td class="text-end">
+                    {% if row.registration.points is None %}
+                        <a href="{% url 'my_registration_delete' row.registration.pk %}" class="btn btn-sm btn-outline-danger">Cancelar</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center text-muted py-4">Aún no estás inscrito en ningún juego.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

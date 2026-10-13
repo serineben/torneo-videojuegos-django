@@ -16,6 +16,8 @@
                     <a class="btn btn-warning btn-sm" href="{% url 'game_list' %}">Juegos</a>
                     <a class="btn btn-warning btn-sm" href="{% url 'participant_list' %}">Participantes</a>
                     <a class="btn btn-warning btn-sm" href="{% url 'general_ranking' %}">Clasificación</a>
+                {% else %}
+                    <a class="btn btn-warning btn-sm" href="{% url 'my_profile' %}">Mi perfil</a>
                 {% endif %}
                 <a class="btn btn-info btn-sm" href="{% url 'dashboard' %}">Estadísticas</a>
                 <span class="text-white me-2">Hola, {{ user.username }}</span>

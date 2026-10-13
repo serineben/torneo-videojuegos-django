@@ -6,6 +6,43 @@
     <a href="{% url 'participant_create' %}" class="btn btn-primary">+ Nuevo participante</a>
 </div>
 
+<form method="get" class="card shadow-sm mb-3">
+    <div class="card-body">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small mb-1">Buscar</label>
+                <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Nombre o correo">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Juego</label>
+                <select name="game" class="form-select">
+                    <option value="">Todos</option>
+                    {% for g in games %}
+                        <option value="{{ g.pk }}" {% if g.pk|stringformat:"s" == selected_game %}selected{% endif %}>{{ g.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Nivel</label>
+                <select name="level" class="form-select">
+                    <option value="">Todos</option>
+                    {% for value, label in levels %}
+                        <option value="{{ value }}" {% if value == selected_level %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button class="btn btn-primary w-100">Filtrar</button>
+                {% if has_filters %}
+                    <a href="{% url 'participant_list' %}" class="btn btn-outline-secondary" title="Limpiar filtros">✕</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</form>
+
+<p class="text-muted small mb-2">{{ paginator.count|default:0 }} participante{{ paginator.count|pluralize }} encontrado{{ paginator.count|pluralize }}</p>
+
 <div class="card shadow-sm">
     <table class="table table-hover mb-0 align-middle">
         <thead class="table-dark">
@@ -42,9 +79,15 @@
                 </td>
             </tr>
             {% empty %}
-            <tr><td colspan="5" class="text-center text-muted py-4">Aún no hay participantes.</td></tr>
+            <tr>
+                <td colspan="5" class="text-center text-muted py-4">
+                    {% if has_filters %}No se han encontrado participantes con esos filtros.{% else %}Aún no hay participantes.{% endif %}
+                </td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+
+{% include "partials/pagination.html" %}
 {% endblock %}

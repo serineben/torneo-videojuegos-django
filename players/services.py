@@ -39,3 +39,27 @@ def general_ranking():
             previous_points = user.total_points
         ranking.append({"position": position, "user": user, "total_points": user.total_points})
     return ranking
+
+
+
+def player_summary(user):
+    """Registrations of a player with their position per game, plus overall position."""
+    rows = []
+    for reg in user.registrations.select_related("game").order_by("game__name"):
+        position = None
+        if reg.points is not None:
+            for item in game_ranking(reg.game):
+                if item["registration"].pk == reg.pk:
+                    position = item["position"]
+                    break
+        rows.append({"registration": reg, "position": position})
+
+    general_position = None
+    total_points = None
+    for item in general_ranking():
+        if item["user"].pk == user.pk:
+            general_position = item["position"]
+            total_points = item["total_points"]
+            break
+
+    return {"rows": rows, "total_points": total_points, "general_position": general_position}

@@ -5,7 +5,15 @@
     <h1 class="h3 mb-0">Juegos</h1>
     <a href="{% url 'game_create' %}" class="btn btn-primary">+ Nuevo juego</a>
 </div>
-
+<form method="get" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Buscar juego por nombre">
+        <button class="btn btn-primary">Buscar</button>
+        {% if q %}
+            <a href="{% url 'game_list' %}" class="btn btn-outline-secondary">Limpiar</a>
+        {% endif %}
+    </div>
+</form>
 <div class="card shadow-sm">
     <table class="table table-hover mb-0 align-middle">
         <thead class="table-dark">
@@ -38,4 +46,5 @@
         </tbody>
     </table>
 </div>
+{% include "partials/pagination.html" %}
 {% endblock %}

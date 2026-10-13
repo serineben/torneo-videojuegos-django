@@ -1,32 +1,58 @@
 from django.contrib import messages
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView, FormView
-
-from accounts.mixins import AdminRequiredMixin
-from accounts.models import User
-from .forms import ParticipantCreateForm, ParticipantUpdateForm, RegistrationForm
-from .models import Registration
-
-
-from django.shortcuts import render
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView, FormView, TemplateView
+from django.db.models import Q
 from django.views import View
 
+
+from accounts.mixins import AdminRequiredMixin, PlayerRequiredMixin, QueryStringMixin
+from accounts.models import User
+from .forms import ParticipantCreateForm, ParticipantUpdateForm, RegistrationForm, PointsFormSet
+from .models import Registration
 from games.models import Game
-from .forms import PointsFormSet
-from .services import game_ranking, general_ranking
+from .services import game_ranking, general_ranking, player_summary
 
 
-class ParticipantListView(AdminRequiredMixin, ListView):
+
+class ParticipantListView(AdminRequiredMixin, QueryStringMixin, ListView):
     template_name = "players/participant_list.html"
     context_object_name = "participants"
+    paginate_by = 10
 
     def get_queryset(self):
-        return (
+        qs = (
             User.objects.filter(role=User.Role.PLAYER)
             .prefetch_related("registrations__game")
             .order_by("username")
         )
+        q = self.request.GET.get("q", "").strip()
+        game = self.request.GET.get("game", "")
+        level = self.request.GET.get("level", "")
+
+        if q:
+            qs = qs.filter(Q(username__icontains=q) | Q(email__icontains=q))
+
+        # One single filter() call, so game and level apply to the SAME registration
+        registration_filters = {}
+        if game.isdigit():
+            registration_filters["registrations__game_id"] = int(game)
+        if level in Registration.Level.values:
+            registration_filters["registrations__level"] = level
+        if registration_filters:
+            qs = qs.filter(**registration_filters)
+
+        return qs.distinct()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["games"] = Game.objects.all()
+        context["levels"] = Registration.Level.choices
+        context["q"] = self.request.GET.get("q", "").strip()
+        context["selected_game"] = self.request.GET.get("game", "")
+        context["selected_level"] = self.request.GET.get("level", "")
+        context["has_filters"] = any([context["q"], context["selected_game"], context["selected_level"]])
+        return context
 
 
 class ParticipantDetailView(AdminRequiredMixin, DetailView):
@@ -175,3 +201,43 @@ class GeneralRankingView(AdminRequiredMixin, View):
 
     def get(self, request):
         return render(request, self.template_name, {"ranking": general_ranking()})
+
+
+
+class MyProfileView(PlayerRequiredMixin, TemplateView):
+    template_name = "players/my_profile.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(player_summary(self.request.user))
+        return context
+
+
+class MyRegistrationCreateView(PlayerRequiredMixin, CreateView):
+    model = Registration
+    form_class = RegistrationForm
+    template_name = "players/my_registration_form.html"
+    success_url = reverse_lazy("my_profile")
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        messages.success(self.request, "Te has inscrito correctamente.")
+        return super().form_valid(form)
+
+
+class MyRegistrationDeleteView(PlayerRequiredMixin, DeleteView):
+    template_name = "players/my_registration_confirm_delete.html"
+    success_url = reverse_lazy("my_profile")
+
+    def get_queryset(self):
+        # Only own registrations, and only while no result has been recorded
+        return Registration.objects.filter(user=self.request.user, points__isnull=True)
+
+    def form_valid(self, form):
+        messages.success(self.request, "Inscripción cancelada.")
+        return super().form_valid(form)

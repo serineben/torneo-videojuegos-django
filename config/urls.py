@@ -27,6 +27,7 @@ urlpatterns = [
     path("juegos/", include("games.urls")),
     path("participantes/", include("players.urls")),
     path("estadisticas/", include("stats.urls")),
+    path("mi-perfil/", include("players.player_urls")),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

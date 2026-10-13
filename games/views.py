@@ -1,16 +1,29 @@
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
-from accounts.mixins import AdminRequiredMixin
+from accounts.mixins import AdminRequiredMixin, QueryStringMixin
 from .forms import GameForm
 from .models import Game
 
 
 
-class GameListView(AdminRequiredMixin, ListView):
+class GameListView(AdminRequiredMixin, QueryStringMixin, ListView):
     model = Game
     template_name = "games/game_list.html"
     context_object_name = "games"
+    paginate_by = 10
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        q = self.request.GET.get("q", "").strip()
+        if q:
+            qs = qs.filter(name__icontains=q)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["q"] = self.request.GET.get("q", "").strip()
+        return context
 
 class GameDetailView(AdminRequiredMixin, DetailView):
     model = Game
